@@ -14,6 +14,9 @@ GIF FILE PARSER
 #include <stdlib.h>
 #include "stdafx.h"
 
+// SET TO 1 ONLY IF YOU WANT TO PRINT ALL UNCOMPRESSED BYTES IN THE GIF. SUITABLE ONLY FOR SMALL FILES OR WHEN OUTPUT REDIRECTED TO A FILE
+#define PRINT_OUT_ALL_UNCOMPRESSED_BYTES 0
+
 #define MAX_GIF_FILE_SIZE 3072000  //3MByte
 
 const char ErrString[20][100] = { "Sorry, The .gif source file not found\n","Error in printf length \n","Error! EOF char not found \n","Error! The source file is not a valid .GIF file\n","Error in reading the file. Quit!!" };
@@ -344,7 +347,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 	printf("LZW MINIMUM CODE SIZE = %d\n", ch);
 
 	ch = fgetc(fp);
-	if (ferror(fp) != 0) {
+	if (ferror(fp) || feof(fp)) {
 		printf(ErrString[4]);
 		return 0;
 	}
@@ -355,7 +358,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 		for (int i = 0; i<NextDataSubBlockSize; i++) {
 			ch = fgetc(fp);
 
-			if (ferror(fp)) {
+			if (ferror(fp) || feof(fp)) {
 				printf(ErrString[4]);
 				return 0;
 			}
@@ -365,7 +368,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 
 		ch = fgetc(fp);
 
-		if (ferror(fp)) {
+		if (ferror(fp)|| feof(fp)) {
 			printf(ErrString[4]);
 			return 0;
 		}
@@ -390,11 +393,16 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 		return 0;
 	}
 
-	printf("UNCOMPRESSED BYTES:\n");
+	if (PRINT_OUT_ALL_UNCOMPRESSED_BYTES) {
+		//set this global variable to TRUE only if you want to print out all the uncompressed image bytes.
+		//suitable only for small size GIFs or when output is directed to a file.
 
-	for (long i = 0; i < uncompressed_length; i++) {
-		if (i%width == 0) printf("\n");
-		printf("%3d ", uncompressed[i]);
+		printf("UNCOMPRESSED BYTES:\n");
+		
+		for (long i = 0; i < uncompressed_length; i++) {
+			if (i%width == 0) printf("\n");
+			printf("%3d ", uncompressed[i]);
+		}
 	}
 
 	printf("\n\nNUMBER OF BYTES IN UNCOMPRESSED DATA BLOCK: %d\n", uncompressed_length);
@@ -442,7 +450,7 @@ int main(int argc, char *argv[])
 	fclose(fp);
 	if (retValue == 0)
 	{
-		printf("!!!!!! GIF FILE NOT PROCESSED\n ");
+		printf("\n!!!!!! GIF FILE NOT PROCESSED\n ");
 		return 0;
 	}
 	else
@@ -487,7 +495,7 @@ int processGIFFile()
 	for (i = 0; i<6; i++)
 	{
 		ch[0] = fgetc(fp);  //Header (6Bytes) reading
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -552,7 +560,7 @@ int processGIFFile()
 	for (i = 0; i<7; i++)
 	{
 		ch[0] = fgetc(fp); //LSD
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return(0);
@@ -708,7 +716,7 @@ int processGIFFile()
 			{
 
 				ch[0] = fgetc(fp);
-				if (ferror(fp) != 0)
+				if (ferror(fp) || feof(fp))
 				{
 					printf(ErrString[4]);
 					return 0;
@@ -755,12 +763,12 @@ int processGIFFile()
 				N = (ch1 >> 4);
 
 				printf("LOCAL COLOUR TABLE BLOCK FOLLOWS\n");
-				LocalColourTable();
+				if(LocalColourTable()==0) return 0;
 			}
 			else
 			{
 				printf("\n\nIMAGE DATA BLOCK FOLLOWS\n");
-				ProcessImageData(height, width);
+				if (ProcessImageData(height, width) == 0) return 0;
 
 			}
 			break;
@@ -768,7 +776,7 @@ int processGIFFile()
 		case 0x21:printf("IT IS AN EXTENSION BLOCK\n");
 
 			printf("CALL THE FUNCTION TO IDENTIFY THE TYPE OF EXTENSION BLOCK\n");
-			Extensions_Handler();
+			if (Extensions_Handler() == 0) return 0;
 			break;
 
 
@@ -786,7 +794,7 @@ int processGIFFile()
 
 		printf("\n\nCOPY THE NEXT BYTE FOR SWITCH FOR COMPARISON\n");
 		BlockTypeByte = fgetc(fp);
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -825,7 +833,7 @@ int LocalColourTable()
 	{
 
 		ch[0] = fgetc(fp);
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -861,7 +869,7 @@ int Extensions_Handler()
 	unsigned char ch;
 
 	ch = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -871,22 +879,22 @@ int Extensions_Handler()
 	if (ch == 0XF9)
 	{
 		printf("It's a Graphic Control Extension Block\n");
-		Graphic_Cntrl_Extn();
+		if (Graphic_Cntrl_Extn() == 0) return 0;
 	}
 	else if (ch == 0X01)
 	{
 		printf("It's a Plaintext Extension Block\n");
-		Plaintext_Extn();
+		if(Plaintext_Extn()==0) return 0;
 	}
 	else if (ch == 0XFF)
 	{
 		printf("It's an Application Extension Block\n");
-		Application_Extn();
+		if (Application_Extn() == 0) return 0;
 	}
 	else if (ch == 0XFE)
 	{
 		printf("It's a Comment Extension Block\n");
-		Comment_Extn();
+		if(Comment_Extn()==0) return 0;
 	}
 	else
 	{
@@ -908,7 +916,7 @@ int Graphic_Cntrl_Extn()
 	printf("Inside Graphic Control Block \n");
 	//read the blocksize byte
 	BlockSize = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -918,7 +926,7 @@ int Graphic_Cntrl_Extn()
 	//read the packed filed
 	//bit 1-8 format , 4-6 Displosal method,7=user input flag, 8-transparent colour flag
 	ch = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -940,13 +948,13 @@ int Graphic_Cntrl_Extn()
 
 	//delay time - 2 bytes
 	delayTime[0] = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
 	}
 	delayTime[1] = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -957,7 +965,7 @@ int Graphic_Cntrl_Extn()
 		GCE_Data.GCE_delay_time[z] = delayTime[z];
 	//delay time - 2 bytes
 	transparent_colour_index = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -966,7 +974,7 @@ int Graphic_Cntrl_Extn()
 	GCE_Data.GCE_transparent_color_ind = transparent_colour_index;
 	//block terminator should be here
 	ch = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -1002,7 +1010,7 @@ int Application_Extn()
 
 	//read the blocksize byte
 	BlockSize = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -1021,7 +1029,7 @@ int Application_Extn()
 	{
 		//tmpBuf[i]=fgetc(fp);
 		APP_Ext_Data.APP_Ext_application_id[i] = fgetc(fp);
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -1037,7 +1045,7 @@ int Application_Extn()
 	for (i = 0; i<3; i++)
 	{
 		tmpBuf[i] = fgetc(fp);
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -1055,7 +1063,7 @@ int Application_Extn()
 		printf("\nThe length of data sub block is ");
 		tmpBuf[0] = fgetc(fp);
 
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -1068,7 +1076,7 @@ int Application_Extn()
 		{
 			tmpBuf[1] = fgetc(fp);
 
-			if (ferror(fp) != 0)
+			if (ferror(fp) || feof(fp))
 			{
 				printf(ErrString[4]);
 				return 0;
@@ -1108,7 +1116,7 @@ int Plaintext_Extn()
 
 	//read the blocksize byte
 	BlockSize = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -1118,7 +1126,7 @@ int Plaintext_Extn()
 	//skip so many bytes
 	for (i = 0; i<BlockSize; i++)
 		ch = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -1126,7 +1134,7 @@ int Plaintext_Extn()
 
 	//copy the image data till 0x00 is encountered
 	ch = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -1134,7 +1142,7 @@ int Plaintext_Extn()
 	i = 0;
 	while ((ch != 0x00) & (i<0xffff))
 		ch = fgetc(fp);
-	if (ferror(fp) != 0)
+	if (ferror(fp) || feof(fp))
 	{
 		printf(ErrString[4]);
 		return 0;
@@ -1174,7 +1182,7 @@ int Comment_Extn()
 		printf("\nThe length of Comment sub block is ");
 		tmpBuf[0] = fgetc(fp);
 
-		if (ferror(fp) != 0)
+		if (ferror(fp) || feof(fp))
 		{
 			printf(ErrString[4]);
 			return 0;
@@ -1190,7 +1198,7 @@ int Comment_Extn()
 		{
 			tmpBuf[1] = fgetc(fp);
 
-			if (ferror(fp) != 0)
+			if (ferror(fp) || feof(fp))
 			{
 				printf(ErrString[4]);
 				return 0;
