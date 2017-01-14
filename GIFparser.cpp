@@ -381,11 +381,13 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 
 	long uncompressed_length = lzw_uncompress_data_block(InGifFileBuf, InFileBufCount + 1, uncompressed, width*height);
 	if (uncompressed_length < 0) {
+		free(uncompressed);
 		return 0;
 	}
 
 	if (uncompressed_length != width*height) {
 		printf("Error: Unexpected number of bytes in the uncompressed stream.\n");
+		free(uncompressed);
 		return 0;
 	}
 
