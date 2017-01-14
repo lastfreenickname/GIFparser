@@ -745,12 +745,12 @@ int processGIFFile()
 			ch[0] = InGifFileBuf[5];
 			ch[1] = InGifFileBuf[6];
 			width = ((ch[1]) << 8) + (ch[0]);
-			printf("IMAGE WIDTH = %d pixels\n", width);
+			printf("IMAGE WIDTH = %u pixels\n", width);
 
 			ch[0] = InGifFileBuf[7];
 			ch[1] = InGifFileBuf[8];
 			height = ((ch[1]) << 8) + (ch[0]);
-			printf("IMAGE HEIGHT = %d pixels\n", height);
+			printf("IMAGE HEIGHT = %u pixels\n", height);
 
 			printf("\n\nCHECK THE LAST BYTE TO FIND, COULD BE LOCAL COLOUR TABLE OR DIRECT IMAGE DATA\n");
 			ch[0] = InGifFileBuf[9];
