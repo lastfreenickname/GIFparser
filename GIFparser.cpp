@@ -254,19 +254,35 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 
 					current_code_ptr = &codetable[codeword];
 
+					if (current_output_position + codetable[codeword].length -1 >= output_length) {
+						//this should never happen
+						printf("Error: Unexpected internal LZW decompression error\n");
+						return -1;
+					}
+
 					for (int i = codetable[codeword].length; i > 0; i--) {
 						output[current_output_position + i - 1] = ((t_codetable)(*current_code_ptr)).index;
 						current_code_ptr = ((t_codetable)(*current_code_ptr)).previous_index_ptr;
 					};
 
 					current_output_position += codetable[codeword].length;
+					if (current_output_position > output_length) {
+						//this should never happen
+						printf("Error: Unexpected internal LZW decompression error\n");
+						return -1;
+					}
 
 					if (previous_code_ptr) {
 						codetable[next_codetable_position].index = output[current_output_position - 1];
-						//codetable[next_codetable_position].index = output[codetable[codeword].length - 1];
 						codetable[next_codetable_position].previous_index_ptr = previous_code_ptr;
 						codetable[next_codetable_position].length = ((t_codetable)(*previous_code_ptr)).length + 1;
+						
 						next_codetable_position++;
+						
+						if (next_codetable_position >= sizeof(codetable) / sizeof(t_codetable)) {
+							printf("Error: Unexpected internal LZW decompression error\n");
+						//	return -1;
+						}
 					}
 					else {
 						//	no action
@@ -295,14 +311,25 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 
 						current_code_ptr = &codetable[next_codetable_position];
 
+						if (current_output_position + codetable[next_codetable_position].length - 1 >= output_length) {
+							//this should never happen
+							printf("Error: Unexpected internal LZW decompression error\n");
+							return -1;
+						}
+
 						for (int i = codetable[next_codetable_position].length; i > 0; i--) {
 							output[current_output_position + i - 1] = ((t_codetable)(*current_code_ptr)).index;
 							current_code_ptr = ((t_codetable)(*current_code_ptr)).previous_index_ptr;
 						};
 
-
 						next_codetable_position++;
+						if (next_codetable_position > sizeof(codetable) / sizeof(t_codetable)) {
+							printf("Error: Unexpected internal LZW decompression error\n");
+							return -1;
+						}
+						
 						current_output_position += codetable[codeword].length;
+
 						previous_code_ptr = &codetable[codeword];
 					}
 
@@ -314,7 +341,7 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 
 				// check if codetable size requires increasing code length 				
 				if ((next_codetable_position >= 1 << (current_code_size + 1)) /*&& (current_code_size < 11)*/) current_code_size++;
-				//next_codetable_position++;
+
 			};
 
 			bits_read = 0;
