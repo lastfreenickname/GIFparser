@@ -12,6 +12,7 @@ GIF FILE PARSER
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "stdafx.h"
 
 // SET TO 1 ONLY IF YOU WANT TO PRINT ALL UNCOMPRESSED BYTES IN THE GIF. SUITABLE ONLY FOR SMALL FILES OR WHEN OUTPUT REDIRECTED TO A FILE
@@ -272,17 +273,19 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 						return -1;
 					}
 
+					if (next_codetable_position >= sizeof(codetable) / sizeof(t_codetable)) {
+						//this should never happen
+						printf("Error: Unexpected internal LZW decompression error\n");
+						return -1;
+					}
+
 					if (previous_code_ptr) {
 						codetable[next_codetable_position].index = output[current_output_position - 1];
 						codetable[next_codetable_position].previous_index_ptr = previous_code_ptr;
 						codetable[next_codetable_position].length = ((t_codetable)(*previous_code_ptr)).length + 1;
 						
 						next_codetable_position++;
-						
-						if (next_codetable_position >= sizeof(codetable) / sizeof(t_codetable)) {
-							printf("Error: Unexpected internal LZW decompression error\n");
-						//	return -1;
-						}
+
 					}
 					else {
 						//	no action
@@ -305,6 +308,12 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 					}
 					else {
 
+						if (next_codetable_position >= sizeof(codetable) / sizeof(t_codetable)) {
+							//this should never happen
+							printf("Error: Unexpected internal LZW decompression error\n");
+							return -1;
+						}
+
 						codetable[next_codetable_position].index = ((t_codetable)(*previous_code_ptr)).index;
 						codetable[next_codetable_position].length = ((t_codetable)(*previous_code_ptr)).length + 1;
 						codetable[next_codetable_position].previous_index_ptr = previous_code_ptr;
@@ -323,12 +332,14 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 						};
 
 						next_codetable_position++;
-						if (next_codetable_position > sizeof(codetable) / sizeof(t_codetable)) {
+						
+						current_output_position += codetable[codeword].length;
+
+						if (current_output_position > output_length) {
+							//this should never happen
 							printf("Error: Unexpected internal LZW decompression error\n");
 							return -1;
 						}
-						
-						current_output_position += codetable[codeword].length;
 
 						previous_code_ptr = &codetable[codeword];
 					}
