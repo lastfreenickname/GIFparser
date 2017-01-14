@@ -1032,7 +1032,7 @@ int Application_Extn()
 			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
-		printf("%c", tmpBuf[i]);
+		printf("%c", APP_Ext_Data.APP_Ext_application_id[i]);
 	}
 	printf("\n");
 	APP_Ext_Data.APP_Ext_application_id[i] = 0;
