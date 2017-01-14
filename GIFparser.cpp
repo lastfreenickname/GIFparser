@@ -19,10 +19,6 @@ GIF FILE PARSER
 
 #define MAX_GIF_FILE_SIZE 3072000  //3MByte
 
-const char ErrString[20][100] = { "Sorry, The .gif source file not found\n","Error in printf length \n","Error! EOF char not found \n","Error! The source file is not a valid .GIF file\n","Error in reading the file. Quit!!" };
-unsigned char SubErrString[20][100] = { "Header Block not found\n" };
-int ErrNo = 0, SubErrNo = 0;
-
 unsigned char InGifFileBuf[MAX_GIF_FILE_SIZE];
 int InFileBufCount = 0;
 int processGIFFile();
@@ -337,7 +333,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 
 	ch = fgetc(fp);
 	if (ferror(fp)) {
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 
@@ -348,7 +344,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 
 	ch = fgetc(fp);
 	if (ferror(fp) || feof(fp)) {
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 
@@ -359,7 +355,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 			ch = fgetc(fp);
 
 			if (ferror(fp) || feof(fp)) {
-				printf(ErrString[4]);
+				printf("Error in reading the file. Quit!!\n");
 				return 0;
 			}
 
@@ -369,7 +365,7 @@ int ProcessImageData(unsigned int height, unsigned int width) {
 		ch = fgetc(fp);
 
 		if (ferror(fp)|| feof(fp)) {
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 	}
@@ -421,7 +417,7 @@ int main(int argc, char *argv[])
 	unsigned char fileName[100];
 	int retValue = 0;
 
-	memset(InGifFileBuf, 0, sizeof(MAX_GIF_FILE_SIZE));
+	memset(InGifFileBuf, 0, sizeof(InGifFileBuf));
 
 	printf("LET'S START\n");
 
@@ -436,7 +432,7 @@ int main(int argc, char *argv[])
 
 	if (fp == NULL)
 	{
-		printf((ErrString[0]));
+		printf("Sorry, The .gif source file not found\n");
 		return(0);
 	}
 	else
@@ -497,7 +493,7 @@ int processGIFFile()
 		ch[0] = fgetc(fp);  //Header (6Bytes) reading
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 
@@ -520,13 +516,11 @@ int processGIFFile()
 	i = memcmp(InGifFileBuf, HeaderBlock_89a, 6);
 	j = memcmp(InGifFileBuf, HeaderBlock_87a, 6);
 
-	if ((i == 0) && (j == 0))
+	if ((i != 0) && (j != 0))
 	{
-		ErrNo = 3; //Not a GIF File
-		printf("%s", ErrString[ErrNo]);
+		printf("Error! The source file is not a valid .GIF file\n");
 
-		SubErrNo = 0; //Header Block not found
-		printf("%s", SubErrString[SubErrNo]);
+		printf("Header Block not found\n");
 
 		return(0);
 	}
@@ -562,7 +556,7 @@ int processGIFFile()
 		ch[0] = fgetc(fp); //LSD
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return(0);
 		}
 
@@ -644,7 +638,7 @@ int processGIFFile()
 		GCTSize = NumOfColours * 3; //EACH COLOUR TAKES 3 BYTES
 
 		printf("NUMBER OF COLOURS IN THE FILE = 2^(N+1) = %d \n", NumOfColours);
-		printf("NUMBER OF BYTES IN THE GLOBAL TABLE TABLE = (NO.OF COLOURS) *3) = %d \n", GCTSize);
+		printf("NUMBER OF BYTES IN THE GLOBAL COLOUR TABLE = (NO.OF COLOURS) *3) = %d \n", GCTSize);
 
 		//READ THE NUMBER OF BYTES, 3 AT A TIME REQUIRED FOR EACH OF THE COLOUR
 
@@ -661,6 +655,10 @@ int processGIFFile()
 		{
 
 			ch[0] = fgetc(fp);
+			if (ferror(fp) || feof(fp)) {
+				printf("Error in reading the file. Quit!!\n");
+				return 0;
+			}
 			InGifFileBuf[InFileBufCount] = ch[0];
 			ch[1] = InGifFileBuf[InFileBufCount];
 			InFileBufCount++;
@@ -682,18 +680,18 @@ int processGIFFile()
 
 	printf("NEXT BYTES ARE\n");
 	InFileBufCount = 0;
-	for (i = 0; i<1; i++)
-	{
 
-		ch[0] = fgetc(fp);
-		InGifFileBuf[InFileBufCount] = ch[0];
-		ch[1] = InGifFileBuf[InFileBufCount];
-		InFileBufCount++;
+	ch[0] = fgetc(fp);
+	if (ferror(fp) || feof(fp)) {
+		printf("Error in reading the file. Quit!!\n");
+		return 0;
 	}
-	for (i = 0; i<InFileBufCount; i++)
-	{
-		printf("%x ", InGifFileBuf[i]);
-	}
+	InGifFileBuf[InFileBufCount] = ch[0];
+	ch[1] = InGifFileBuf[InFileBufCount];
+	InFileBufCount++;
+	
+	printf("%x ", InGifFileBuf[i]);
+
 
 	printf("\nEND OF NEXT BYTE READING\n");
 
@@ -718,7 +716,7 @@ int processGIFFile()
 				ch[0] = fgetc(fp);
 				if (ferror(fp) || feof(fp))
 				{
-					printf(ErrString[4]);
+					printf("Error in reading the file. Quit!!\n");
 					return 0;
 				}
 				InGifFileBuf[InFileBufCount] = ch[0];
@@ -796,7 +794,7 @@ int processGIFFile()
 		BlockTypeByte = fgetc(fp);
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 		printf("BlockTypeByte = %x\n", BlockTypeByte);
@@ -835,7 +833,7 @@ int LocalColourTable()
 		ch[0] = fgetc(fp);
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 		InGifFileBuf[InFileBufCount] = ch[0];
@@ -871,7 +869,7 @@ int Extensions_Handler()
 	ch = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("Type of an extension block = %x \n", ch);
@@ -918,7 +916,7 @@ int Graphic_Cntrl_Extn()
 	BlockSize = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("The Blocksize is = %d \n", BlockSize);
@@ -928,7 +926,7 @@ int Graphic_Cntrl_Extn()
 	ch = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("The packed byte is =%x\n", ch);
@@ -950,13 +948,13 @@ int Graphic_Cntrl_Extn()
 	delayTime[0] = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	delayTime[1] = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("The delay time flag value is %x %x\n", delayTime[0], delayTime[1]);
@@ -967,7 +965,7 @@ int Graphic_Cntrl_Extn()
 	transparent_colour_index = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("The transparent_colour_index %d\n", transparent_colour_index);
@@ -976,7 +974,7 @@ int Graphic_Cntrl_Extn()
 	ch = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 
@@ -1012,7 +1010,7 @@ int Application_Extn()
 	BlockSize = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("The block size is = %d\n", BlockSize);
@@ -1031,7 +1029,7 @@ int Application_Extn()
 		APP_Ext_Data.APP_Ext_application_id[i] = fgetc(fp);
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 		printf("%c", tmpBuf[i]);
@@ -1047,7 +1045,7 @@ int Application_Extn()
 		tmpBuf[i] = fgetc(fp);
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 		printf("%c", tmpBuf[i]);
@@ -1065,7 +1063,7 @@ int Application_Extn()
 
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 		printf("%d \n", tmpBuf[0]);
@@ -1078,7 +1076,7 @@ int Application_Extn()
 
 			if (ferror(fp) || feof(fp))
 			{
-				printf(ErrString[4]);
+				printf("Error in reading the file. Quit!!\n");
 				return 0;
 			}
 			printf("%x ", tmpBuf[1]);
@@ -1092,12 +1090,6 @@ int Application_Extn()
 	{
 		Appli_Ext_Blocks_count++;
 		printf("!!!!GOOD! Block terminator of Application Extension block reached\n");
-	}
-
-	else
-	{
-		printf("!!!!SOMETHING IS WRONG!! Block terminator of Application Extn block not found\n");
-		return 0;
 	}
 
 	return 1;
@@ -1118,7 +1110,7 @@ int Plaintext_Extn()
 	BlockSize = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	printf("The number of bytes to skip is = %d\n ", BlockSize);
@@ -1128,7 +1120,7 @@ int Plaintext_Extn()
 		ch = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 
@@ -1136,7 +1128,7 @@ int Plaintext_Extn()
 	ch = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 	i = 0;
@@ -1144,7 +1136,7 @@ int Plaintext_Extn()
 		ch = fgetc(fp);
 	if (ferror(fp) || feof(fp))
 	{
-		printf(ErrString[4]);
+		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
 
@@ -1184,7 +1176,7 @@ int Comment_Extn()
 
 		if (ferror(fp) || feof(fp))
 		{
-			printf(ErrString[4]);
+			printf("Error in reading the file. Quit!!\n");
 			return 0;
 		}
 		printf("%x \n", tmpBuf[0]);
@@ -1200,7 +1192,7 @@ int Comment_Extn()
 
 			if (ferror(fp) || feof(fp))
 			{
-				printf(ErrString[4]);
+				printf("Error in reading the file. Quit!!\n");
 				return 0;
 			}
 			printf("%x ", tmpBuf[1]);
