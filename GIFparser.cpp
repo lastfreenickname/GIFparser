@@ -144,7 +144,12 @@ long lzw_uncompress_data_block(const unsigned char* data_block, int data_block_l
 	int current_subblock_length = 0;
 	int current_subblock_position = 0;
 	int current_block_position = 1;
-	int current_output_position = 0;
+	
+
+	//MODIFICATION BY BVG - changed int to unsigned int to eliminate warning
+	//int current_output_position = 0;
+	unsigned int current_output_position = 0
+
 	int bits_read = 0;
 	int bitmask_position = 8; // set to 8 to indicate that we need to read new byte in the first run of the cycle
 	unsigned char current_byte = 0;
