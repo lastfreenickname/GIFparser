@@ -1221,7 +1221,8 @@ int Plaintext_Extn()
 //Comment_Extn()- Extracts comment text of GIF file. Usage of this extension is Very rare
 int Comment_Extn()
 {
-	unsigned char BlockSize = 0;
+	//BlockSize variable declared below is unused; so commenting out - maruthi
+	//unsigned char BlockSize = 0;
 	unsigned char tmpBuf[100];
 	int i = 0;
 	printf("Inside the Comment Extension\n");
