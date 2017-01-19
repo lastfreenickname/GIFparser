@@ -975,7 +975,9 @@ int Graphic_Cntrl_Extn()
 		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
-	printf("The Blocksize is = %d \n", BlockSize);
+	//Changing format specifier for Blocksize variable from %d to %x 
+	//in below printf for more readability -maruthi
+	printf("The Blocksize is = %x \n", BlockSize);
 
 	//read the packed filed
 	//bit 1-8 format , 4-6 Displosal method,7=user input flag, 8-transparent colour flag
@@ -1072,7 +1074,9 @@ int Application_Extn()
 		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
-	printf("The block size is = %d\n", BlockSize);
+	//Changing format specifier for Blocksize variable from %d to %x 
+	//in below printf for more readability -maruthi
+	printf("The block size is = %x\n", BlockSize);
 
 	if (BlockSize != 0x0b)
 	{
@@ -1172,7 +1176,9 @@ int Plaintext_Extn()
 		printf("Error in reading the file. Quit!!\n");
 		return 0;
 	}
-	printf("The number of bytes to skip is = %d\n ", BlockSize);
+	//Changing format specifier for Blocksize variable from %d to %x 
+	//in below printf for more readability -maruthi
+	printf("The number of bytes to skip is = %x\n ", BlockSize);
 
 	//skip so many bytes
 	for (i = 0; i<BlockSize; i++)
