@@ -953,9 +953,12 @@ int Extensions_Handler()
 }
 
 //Graphic_Cntrl_Extn() - It parses the animation related bytes
+//MODIFICATION BY BVG - 
+//tmpBuf[100] is changed to tmpBuf[10], unnecessary extra memory delcaration removed
+
 int Graphic_Cntrl_Extn()
 {
-	unsigned char BlockSize = 0, tmpBuf[100], ch, ch1, delayTime[2], transparent_colour_index;
+	unsigned char BlockSize = 0, tmpBuf[10], ch, ch1, delayTime[2], transparent_colour_index;
 	int i = 0;
 	GCE_struct GCE_Data;
 
@@ -1045,10 +1048,13 @@ int Graphic_Cntrl_Extn()
 
 
 //Application_Extn() - Reads application name, version as well as application sub-block data
+//MODIFICATION BY BVG - 
+//tmpBuf[100] is changed to tmpBuf[10], unnecessary extra memory delcaration removed
+
 int Application_Extn()
 {
 	unsigned char BlockSize = 0;
-	unsigned char tmpBuf[100];
+	unsigned char tmpBuf[10];
 	int i = 0;
 	APP_Ext_struct APP_Ext_Data;
 
